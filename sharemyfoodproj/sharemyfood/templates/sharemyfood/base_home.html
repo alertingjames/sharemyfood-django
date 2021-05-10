@@ -1,0 +1,187 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Sharemyfood{% endblock %}</title>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Satisfy' rel="stylesheet" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/sharemyfood/style.css"/>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+    <link rel="shortcut icon" href="/static/sharemyfood/images/logo.png" type="image/jpg">
+
+    <!-- add styles -->
+    <link href="/static/sharemyfood/css/main.css" rel="stylesheet" type="text/css" />
+    <link href="/static/sharemyfood/css/jquery.Jcrop.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- add scripts -->
+    <script src="/static/sharemyfood/js/jquery.min.js"></script>
+    <script src="/static/sharemyfood/js/jquery.Jcrop.min.js"></script>
+
+<style>
+
+.dropdown-menu{
+    background-color: #fff;
+    padding-left:20px;
+    padding-right:20px;
+    width:180px;
+}
+
+.menu{
+    color: black;
+}
+
+.menu:hover{
+    background-color:#eee;
+    color:red;
+}
+
+.menu a{
+    color:black;
+}
+
+h4{
+    color:white;
+}
+
+h4:hover{
+    color:white;
+    text-decoration:underline;
+}
+
+</style>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>-->
+</head>
+
+<body>
+
+<nav id="navbar" class="navbar navbar-inverse" style="background:transparent; border:0;">
+    <div class="container-fluid">
+
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#topNavBar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+        </div>
+
+        <div class="collapse navbar-collapse" id="topNavBar">
+            <ul class="nav navbar-nav">
+                <li>
+                    <a href="/home">
+                        <h4 style=""><span class="fas fa-user-friends" aria-hidden="true" style="margin-right:10px;"></span>Users</h4>
+                    </a>
+                </li>
+                <li style="margin-right:30px;">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                        <h4><span class="fa fa-filter" aria-hidden="true"></span></h4>
+                    </a>
+                    <ul class="dropdown-menu" role="menu" id="menu">
+                        <div style="font-size:14px; color:black; font-weight:600; padding-top:10px; padding-bottom:10px;">New User Sigup</div>
+                        <div style="background-color:gray; width:100%; height:1px;"></div>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=1">In last 1 hour</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=3">In last 3 hours</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=6">In last 6 hours</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=12">In last 12 hours</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=24">In last 1 day</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=72">In last 3 days</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=168">In last 1 week</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=720">In last 1 month</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=2160">In last 3 months</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=4320">In last 6 months</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/filtermember?timekey=8760">In last 1 year</a></h5></li>
+                        <li class="menu" style="margin-top:20px;"><h5><a href="/home">Since inception</a></h5></li>
+                    </ul>
+                </li>
+
+                <li style="margin-right:30px;">
+                    <a href="/allproducts">
+                        <h4 style=""><span class="fas fa-hamburger" style="margin-right:10px;"></span>Products</h4>
+                    </a>
+                </li>
+
+                <li style="margin-right:30px;">
+                    <a href="/analysis">
+                        <h4 style=""><span class="fa fa-bar-chart" style="margin-right:10px;"></span>Analysis</h4>
+                    </a>
+                </li>
+
+
+                <li style="margin-right:30px;">
+                    <a href="/feedback">
+                        <h4><span class="far fa-comment-alt" aria-hidden="true" style="margin-right:10px;"></span>Feedback</h4>
+                    </a>
+                </li>
+
+                <li style="margin-right:30px;">
+                    <a href="/ambassador">
+                        <h4><span class="fa fa-handshake-o" aria-hidden="true" style="margin-right:10px;"></span>Volunteers</h4>
+                    </a>
+                </li>
+
+            </ul>
+
+            <form class="navbar-form navbar-left" role="search" method="POST" action="#" style="display:none;">
+                {% csrf_token %}
+                <h4><div class="form-group">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="q" value="" placeholder="Type a keyword...">
+                        <span class="input-group-btn">
+                            <button type="submit" class="btn btn-success">Search</button>
+                        </span>
+                    </div>
+                </div></h4>
+            </form>
+
+            <ul class="nav navbar-nav navbar-right">
+
+                <li class="" style="margin-right:30px; display:none;" id="export">
+                    <a href="/export_xlsx">
+                        <h4 style=""><span class="fa fa-file-excel-o" aria-hidden="true" style="margin-right:10px;"></span>Export</h4>
+                    </a>
+                </li>
+
+                <li style="margin-right:30px;">
+                    <a href="/adminsetting">
+                        <h4 style=""><span class="fa fa-user-circle" aria-hidden="true" style="margin-right:10px;"></span>Account</h4>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/logout">
+                        <h4><span class="glyphicon glyphicon-off" aria-hidden="true" style="margin-right:10px;"></span>Logout</h4>
+                    </a>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+</nav>
+
+
+{% block body %}
+{% endblock %}
+
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

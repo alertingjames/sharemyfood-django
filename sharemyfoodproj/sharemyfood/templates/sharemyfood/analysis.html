@@ -1,0 +1,1257 @@
+{% extends 'sharemyfood/base.html' %}
+{% block title %}Photo approval{% endblock %}
+{% block body %}
+
+<br>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.anychart.com/js/8.0.1/anychart-core.min.js"></script>
+<script src="https://cdn.anychart.com/js/8.0.1/anychart-pie.min.js"></script>
+
+<style>
+
+html, body{
+  background:#333333 no-repeat center center fixed;
+  background-size:cover;
+}
+
+.header {
+  background:transparent;
+  text-align:center;
+}
+
+#myBtn {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  right: 10px;
+  z-index: 99;
+  border: none;
+  outline: none;
+  background-color: red;
+  color: white;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 15px;
+}
+
+#myBtn:hover {
+  background-color: blue;
+}
+
+#admin{
+    display:none;
+}
+
+.info p {
+  text-align:center;
+  color: #999;
+  text-transform:none;
+  font-weight:600;
+  font-size:15px;
+  margin-top:2px
+}
+
+.info i {
+  color:#F6AA93;
+}
+
+p span {
+  color: #F00;
+}
+
+p {
+  margin: 0px;
+  font-weight: 200;
+  line-height: 2;
+}
+
+input {
+  border-radius: 5px;
+  border: 1px solid #eee;
+  margin-bottom: 10px;
+  width: 100%;
+  height: 42px;
+  float: left;
+  padding: 0px 15px;
+  opacity: 0.8;
+  color:blue;
+}
+
+.form-group {
+  overflow: hidden;
+  width:100%;
+}
+
+
+.show {
+    z-index:1000;
+    position: absolute;
+    background-color:#ffffff;
+    border: 2px solid orange;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.25);
+    padding: 10px;
+    display: block;
+    font-size:20px;
+    border-radius:20px;
+    margin: 0;
+    list-style-type: none;
+    list-style: none;
+}
+
+.hide {
+    display: none;
+}
+
+
+            .table {
+              width: 100%;
+              background-color: transparent;
+              overflow-x:auto;
+            }
+
+            .table>tbody>tr>td{
+                vertical-align: middle;
+                text-align: center;
+            }
+
+            table td, table th {
+              color: #fff;
+              padding: 10px;
+              vertical-align: middle;
+            }
+
+            table td {
+              font-size: 0.7em;
+              line-height: 1.4;
+            }
+
+            table td:last-child {
+              font-size: 0.7em;
+              line-height: 1.4;
+            }
+
+            table th {
+              background-color: transparent;
+              font-weight: 500;
+              font-size: 0.9em;
+              color:white;
+              text-align: center;
+              vertical-align: middle;
+            }
+
+
+            /* width */
+            ::-webkit-scrollbar {
+              width: 5px;
+            }
+
+            /* Track */
+            ::-webkit-scrollbar-track {
+              box-shadow: inset 0 0 5px grey;
+              border-radius: 10px;
+            }
+
+            /* Handle */
+            ::-webkit-scrollbar-thumb {
+              background: green;
+              border-radius: 10px;
+            }
+
+            /* Handle on hover */
+            ::-webkit-scrollbar-thumb:hover {
+              background: #b30000;
+            }
+
+
+
+
+</style>
+
+<script type="text/javascript">
+		function initialise() {
+			// create object literal to store map properties
+			var myOptions = {
+				zoom: 6 // set zoom level
+				, mapTypeId: google.maps.MapTypeId.HYBRID // apply tile (options include ROADMAP, SATELLITE, HYBRID and TERRAIN)
+			};
+
+			// create map object and apply properties
+			var map = new google.maps.Map( document.getElementById( "map_canvas" ), myOptions );
+
+			// create map bounds object
+			var bounds = new google.maps.LatLngBounds();
+
+			// create array containing locations
+// 			var locations = [
+// 				[ 'Bondi Beach', -33.890542, 151.274856 ]
+// 				, [ 'Coogee Beach', -33.923036, 151.259052 ]
+// 				, [ 'Cronulla Beach', -34.028249, 151.157507 ]
+// 				, [ 'Manly Beach', -33.80010128657071, 151.28747820854187 ]
+// 				, [ 'Maroubra Beach', -33.950198, 151.259302 ]
+// 			];
+
+			var locations = [
+                {% for user in users %}
+                    {% if user.latitude != None %}
+                        ['{{ user.address }}', {{ user.latitude }}, {{ user.longitude }}, '{{user.picture_url}}', '{{user.name}}'],
+                    {% endif %}
+                {% endfor %}
+            ];
+
+
+			// loop through locations and add to map
+			for ( var i = 0; i < locations.length; i++ )
+			{
+				// get current location
+				var location = locations[ i ];
+
+                // create map position
+    			var position = new google.maps.LatLng( location[ 1 ], location[ 2 ] );
+
+                // add position to bounds
+        		bounds.extend( position );
+
+				// create marker (https://developers.google.com/maps/documentation/javascript/reference#MarkerOptions)
+
+				var icon = {
+                  url: location[ 3 ],
+                  size: new google.maps.Size(40, 40),
+                  origin: new google.maps.Point(0, 0),
+                  anchor: new google.maps.Point(17, 34),
+                  scaledSize: new google.maps.Size(40, 40)
+                };
+
+				var marker = new google.maps.Marker({
+					animation: google.maps.Animation.DROP
+				//  	, icon: icon
+					, map: map
+					, position: position
+					, title: location[ 4 ] + ": " + location[ 0 ]
+				});
+
+				// create info window and add to marker (https://developers.google.com/maps/documentation/javascript/reference#InfoWindowOptions)
+				google.maps.event.addListener( marker, 'click', (
+					function( marker, i ) {
+						return function() {
+							var infowindow = new google.maps.InfoWindow();
+							infowindow.setContent( locations[ i ][ 4 ] + ": " + locations[ i ][ 0 ] );
+							infowindow.open( map, marker );
+						}
+					}
+				)( marker, i ) );
+			};
+
+			if (locations.length == 0){
+			    var center = new google.maps.LatLng(20.5936832, 78.962883);
+                map.panTo(center);
+			}
+			else{
+     			map.fitBounds( bounds );
+			};
+
+// 			// fit map to bounds
+// 			map.fitBounds( bounds );
+
+
+		}
+
+		// load map after page has finished loading
+		function loadScript() {
+			var script = document.createElement( "script" );
+			script.type = "text/javascript";
+			script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyByTc3AUbzYq3t3bvOz4C2yCG9PDRuPjYY&libraries=places&callback=initialise"; // initialize method called using callback parameter
+			document.body.appendChild( script );
+		}
+		window.onload = loadScript;
+</script>
+
+
+<script>
+// 	history.pushState(null, null, location.href);
+// 	window.onpopstate = function () {
+//         history.go(1);
+//     };
+</script>
+
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+<link rel="stylesheet" href="../lib/w3.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<div style="width:100%; height:auto;">
+
+
+    <div class="header">
+        <div style="display:inline-block;color: white; font-size: 1.6em;
+            font-weight:900; text-shadow: 4px 4px 8px #111111; padding: 1rem; text-align: left; text-transform: uppercase; font-family:Verdana, cursive;">
+            <img class="centered-and-cropped" src="/static/sharemyfood/images/logo.png" alt=""
+                    style="width:40px; height:40px; border-radius:50%; margin-right:20px;box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1); margin-bottom:8px;"/>
+            <img src="/static/sharemyfood/images/logotitle.png" style="width:250px; height:auto; border-radius:0px; margin-bottom:8px;"> Analysis
+        </div>
+    </div>
+
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-sm-3">
+                <div>
+
+                    <div class="contentform">
+
+                        <div style="width:100%; height:300px;">
+
+                            <div style="width:100%; padding-top:25px;">
+
+                                <div style="width:100%;">
+
+                                    <div style="float:left; text-align:center; width:33%;">
+
+                                        <img src="/static/sharemyfood/images/profile.png" style="width:40px; height:auto;">
+                                        <div style="color:white; margin-top:20px; font-size:12px;">All Registered Users</div>
+                                        <div style="color:white; font-size:25px; font-weight:500; font-family:Roboto Condensed;">{{allusercount}}</div>
+
+                                        <div style="color:white; margin-top:10px; font-size:12px;">Food-Shared Users</div>
+                                        <div style="color:white; font-size:25px; font-weight:500; font-family:Roboto Condensed;">{{sharedusercount}}</div>
+
+                                    </div>
+
+                                    <div style="float:left; text-align:center; width:34%; height:auto;">
+
+                                        <img src="/static/sharemyfood/images/food.png" style="width:40px; height:auto;">
+                                        <div style="color:white; margin-top:20px; font-size:12px;">Total Shared Food</div>
+                                        <div style="color:white; font-size:25px; font-weight:500; font-family:Roboto Condensed;">{{allproductcount}}</div>
+
+                                        <div style="color:white; margin-top:10px; font-size:12px;">Total Shared Food (kg)</div>
+                                        <div style="color:white; font-size:25px; font-weight:500; font-family:Roboto Condensed;">{{productweight}}</div>
+
+                                    </div>
+
+                                    <div style="float:left; text-align:center; width:33%; height:auto;">
+
+                                        <img src="/static/sharemyfood/images/volunteer.png" style="width:40px; height:auto;">
+                                        <div style="color:white; margin-top:20px; font-size:12px;">Volunteers</div>
+                                        <div style="color:white; font-size:25px; font-weight:500; font-family:Roboto Condensed;">{{ambassadorcount}}</div>
+
+                                    </div>
+
+                                    <div id="container5" style="width: 100%; height: 180px;"></div>
+
+                                    <script>
+
+                                            anychart.onDocumentReady(function() {
+
+                                                  // set the data
+                                                  var data = [
+                                                      {x: "Shared", value: {{productweight}}},
+                                                      {x: "Unconsumed", value: {{unconsumedweight}}},
+                                                  ];
+
+                                                  // create the chart
+                                                  var chart = anychart.pie();
+
+                                                  // add the data
+                                                  chart.data(data);
+
+                                                  // display the chart in the container
+                                                  chart.container('container5');
+                                                  chart.draw();
+
+                                                  chart.background().fill({
+                                                        keys: ["transparent"],
+                                                        angle: 130,
+                                                });
+
+                                                // set legend position
+                                                chart.legend().position("right");
+                                                // set items layout
+                                                chart.legend().itemsLayout("vertical");
+
+                                            });
+
+
+                                    </script>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <br>
+            </div>
+
+
+
+            <div class="col-sm-4">
+                <div>
+
+                    <div class="contentform">
+                        <div style="width:100%; height:auto;">
+
+
+                            <div id="container2"></div>
+                            <script src="https://code.highcharts.com/highcharts.src.js"></script>
+
+                            <script>
+
+                                Highcharts.theme = {
+                                    colors: ['#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066',
+                                        '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
+                                    chart: {
+                                        backgroundColor: {
+                                            linearGradient: { x1: 0, y1: 0, x2: 1, y2: 1 },
+                                            stops: [
+                                                [0, '#2a2a2b'],
+                                                [1, '#3e3e40']
+                                            ]
+                                        },
+                                        style: {
+                                            fontFamily: '\'Unica One\', sans-serif'
+                                        },
+                                        plotBorderColor: '#606063'
+                                    },
+                                    title: {
+                                        style: {
+                                            color: '#E0E0E3',
+                                            // textTransform: 'uppercase',
+                                            fontSize: '20px'
+                                        }
+                                    },
+                                    subtitle: {
+                                        style: {
+                                            color: '#E0E0E3',
+                                            // textTransform: 'uppercase'
+                                        }
+                                    },
+                                    xAxis: {
+                                        gridLineColor: '#707073',
+                                        labels: {
+                                            style: {
+                                                color: '#E0E0E3'
+                                            }
+                                        },
+                                        lineColor: '#707073',
+                                        minorGridLineColor: '#505053',
+                                        tickColor: '#707073',
+                                        title: {
+                                            style: {
+                                                color: '#A0A0A3'
+
+                                            }
+                                        }
+                                    },
+                                    yAxis: {
+                                        gridLineColor: '#707073',
+                                        labels: {
+                                            style: {
+                                                color: '#E0E0E3'
+                                            }
+                                        },
+                                        lineColor: '#707073',
+                                        minorGridLineColor: '#505053',
+                                        tickColor: '#707073',
+                                        tickWidth: 1,
+                                        title: {
+                                            style: {
+                                                color: '#A0A0A3'
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                                        style: {
+                                            color: '#F0F0F0'
+                                        }
+                                    },
+                                    plotOptions: {
+                                        series: {
+                                            dataLabels: {
+                                                color: '#F0F0F3',
+                                                style: {
+                                                    fontSize: '13px'
+                                                },
+                                                enabled: true
+                                            },
+                                            marker: {
+                                                lineColor: '#333'
+                                            }
+                                        },
+                                        boxplot: {
+                                            fillColor: '#505053'
+                                        },
+                                        candlestick: {
+                                            lineColor: 'white'
+                                        },
+                                        errorbar: {
+                                            color: 'white'
+                                        }
+                                    },
+                                    legend: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                                        itemStyle: {
+                                            color: '#E0E0E3'
+                                        },
+                                        itemHoverStyle: {
+                                            color: '#FFF'
+                                        },
+                                        itemHiddenStyle: {
+                                            color: '#606063'
+                                        },
+                                        title: {
+                                            style: {
+                                                color: '#C0C0C0'
+                                            }
+                                        }
+                                    },
+                                    credits: {
+                                        style: {
+                                            color: '#666'
+                                        }
+                                    },
+                                    labels: {
+                                        style: {
+                                            color: '#707073'
+                                        }
+                                    },
+
+                                    drilldown: {
+                                        activeAxisLabelStyle: {
+                                            color: '#F0F0F3'
+                                        },
+                                        activeDataLabelStyle: {
+                                            color: '#F0F0F3'
+                                        }
+                                    },
+
+                                    navigation: {
+                                        buttonOptions: {
+                                            symbolStroke: '#DDDDDD',
+                                            theme: {
+                                                fill: '#505053'
+                                            }
+                                        }
+                                    },
+
+                                    // scroll charts
+                                    rangeSelector: {
+                                        buttonTheme: {
+                                            fill: '#505053',
+                                            stroke: '#000000',
+                                            style: {
+                                                color: '#CCC'
+                                            },
+                                            states: {
+                                                hover: {
+                                                    fill: '#707073',
+                                                    stroke: '#000000',
+                                                    style: {
+                                                        color: 'white'
+                                                    }
+                                                },
+                                                select: {
+                                                    fill: '#000003',
+                                                    stroke: '#000000',
+                                                    style: {
+                                                        color: 'white'
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        inputBoxBorderColor: '#505053',
+                                        inputStyle: {
+                                            backgroundColor: '#333',
+                                            color: 'silver'
+                                        },
+                                        labelStyle: {
+                                            color: 'silver'
+                                        }
+                                    },
+
+                                    navigator: {
+                                        handles: {
+                                            backgroundColor: '#666',
+                                            borderColor: '#AAA'
+                                        },
+                                        outlineColor: '#CCC',
+                                        maskFill: 'rgba(255,255,255,0.1)',
+                                        series: {
+                                            color: '#7798BF',
+                                            lineColor: '#A6C7ED'
+                                        },
+                                        xAxis: {
+                                            gridLineColor: '#505053'
+                                        }
+                                    },
+
+                                    scrollbar: {
+                                        barBackgroundColor: '#808083',
+                                        barBorderColor: '#808083',
+                                        buttonArrowColor: '#CCC',
+                                        buttonBackgroundColor: '#606063',
+                                        buttonBorderColor: '#606063',
+                                        rifleColor: '#FFF',
+                                        trackBackgroundColor: '#404043',
+                                        trackBorderColor: '#404043'
+                                    }
+                                };
+
+                                // Apply the theme
+                                Highcharts.setOptions(Highcharts.theme);
+
+
+
+                                Highcharts.chart('container2', {
+                                    chart: {
+                                        type: 'line'
+                                    },
+                                    title: {
+                                        text: 'Monthly Shared / Unconsumed Food (kg)'
+                                    },
+                                    xAxis: {
+                                        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                                    },
+                                    series: [{
+                                        name: 'Shared',
+                                        data: [
+                                            {% for entry in monthlyProductWeights %}{{ entry }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                        ]
+                                    },
+
+                                    {
+                                        name: 'Unconsumed',
+                                        data: [
+                                            {% for entry in monthlyUnconsumedWeights %}{{ entry }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                        ]
+
+                                    }]
+
+                                });
+
+                            </script>
+
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+                <br>
+            </div>
+
+
+
+            <div class="col-sm-5">
+                <div>
+
+                    <div class="contentform">
+
+                        <div style="width:100%; height:auto; background:green;">
+
+                            <div id="container"></div>
+                            <script src="https://code.highcharts.com/highcharts.src.js"></script>
+
+                            <script>
+
+                                Highcharts.theme = {
+                                    colors: ['#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066',
+                                        '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
+                                    chart: {
+                                        backgroundColor: {
+                                            linearGradient: { x1: 0, y1: 0, x2: 1, y2: 1 },
+                                            stops: [
+                                                [0, '#2a2a2b'],
+                                                [1, '#3e3e40']
+                                            ]
+                                        },
+                                        style: {
+                                            fontFamily: '\'Unica One\', sans-serif'
+                                        },
+                                        plotBorderColor: '#606063'
+                                    },
+                                    title: {
+                                        style: {
+                                            color: '#E0E0E3',
+                                            // textTransform: 'uppercase',
+                                            fontSize: '20px'
+                                        }
+                                    },
+                                    subtitle: {
+                                        style: {
+                                            color: '#E0E0E3',
+                                            // textTransform: 'uppercase'
+                                        }
+                                    },
+                                    xAxis: {
+                                        gridLineColor: '#707073',
+                                        labels: {
+                                            style: {
+                                                color: '#E0E0E3'
+                                            }
+                                        },
+                                        lineColor: '#707073',
+                                        minorGridLineColor: '#505053',
+                                        tickColor: '#707073',
+                                        title: {
+                                            style: {
+                                                color: '#A0A0A3'
+
+                                            }
+                                        }
+                                    },
+                                    yAxis: {
+                                        gridLineColor: '#707073',
+                                        labels: {
+                                            style: {
+                                                color: '#E0E0E3'
+                                            }
+                                        },
+                                        lineColor: '#707073',
+                                        minorGridLineColor: '#505053',
+                                        tickColor: '#707073',
+                                        tickWidth: 1,
+                                        title: {
+                                            style: {
+                                                color: '#A0A0A3'
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                                        style: {
+                                            color: '#F0F0F0'
+                                        }
+                                    },
+                                    plotOptions: {
+                                        series: {
+                                            dataLabels: {
+                                                color: '#F0F0F3',
+                                                style: {
+                                                    fontSize: '13px'
+                                                },
+                                                enabled: true
+                                            },
+                                            marker: {
+                                                lineColor: '#333'
+                                            }
+                                        },
+                                        boxplot: {
+                                            fillColor: '#505053'
+                                        },
+                                        candlestick: {
+                                            lineColor: 'white'
+                                        },
+                                        errorbar: {
+                                            color: 'white'
+                                        }
+                                    },
+                                    legend: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                                        itemStyle: {
+                                            color: '#E0E0E3'
+                                        },
+                                        itemHoverStyle: {
+                                            color: '#FFF'
+                                        },
+                                        itemHiddenStyle: {
+                                            color: '#606063'
+                                        },
+                                        title: {
+                                            style: {
+                                                color: '#C0C0C0'
+                                            }
+                                        }
+                                    },
+                                    credits: {
+                                        style: {
+                                            color: '#666'
+                                        }
+                                    },
+                                    labels: {
+                                        style: {
+                                            color: '#707073'
+                                        }
+                                    },
+
+                                    drilldown: {
+                                        activeAxisLabelStyle: {
+                                            color: '#F0F0F3'
+                                        },
+                                        activeDataLabelStyle: {
+                                            color: '#F0F0F3'
+                                        }
+                                    },
+
+                                    navigation: {
+                                        buttonOptions: {
+                                            symbolStroke: '#DDDDDD',
+                                            theme: {
+                                                fill: '#505053'
+                                            }
+                                        }
+                                    },
+
+                                    // scroll charts
+                                    rangeSelector: {
+                                        buttonTheme: {
+                                            fill: '#505053',
+                                            stroke: '#000000',
+                                            style: {
+                                                color: '#CCC'
+                                            },
+                                            states: {
+                                                hover: {
+                                                    fill: '#707073',
+                                                    stroke: '#000000',
+                                                    style: {
+                                                        color: 'white'
+                                                    }
+                                                },
+                                                select: {
+                                                    fill: '#000003',
+                                                    stroke: '#000000',
+                                                    style: {
+                                                        color: 'white'
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        inputBoxBorderColor: '#505053',
+                                        inputStyle: {
+                                            backgroundColor: '#333',
+                                            color: 'silver'
+                                        },
+                                        labelStyle: {
+                                            color: 'silver'
+                                        }
+                                    },
+
+                                    navigator: {
+                                        handles: {
+                                            backgroundColor: '#666',
+                                            borderColor: '#AAA'
+                                        },
+                                        outlineColor: '#CCC',
+                                        maskFill: 'rgba(255,255,255,0.1)',
+                                        series: {
+                                            color: '#7798BF',
+                                            lineColor: '#A6C7ED'
+                                        },
+                                        xAxis: {
+                                            gridLineColor: '#505053'
+                                        }
+                                    },
+
+                                    scrollbar: {
+                                        barBackgroundColor: '#808083',
+                                        barBorderColor: '#808083',
+                                        buttonArrowColor: '#CCC',
+                                        buttonBackgroundColor: '#606063',
+                                        buttonBorderColor: '#606063',
+                                        rifleColor: '#FFF',
+                                        trackBackgroundColor: '#404043',
+                                        trackBorderColor: '#404043'
+                                    }
+                                };
+
+                                // Apply the theme
+                                Highcharts.setOptions(Highcharts.theme);
+
+
+
+                                Highcharts.chart('container', {
+                                    chart: {
+                                        type: 'column'
+                                    },
+                                    title: {
+                                        text: 'Monthly Users & Shared Users'
+                                    },
+                                    xAxis: {
+                                        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                                    },
+                                    series: [{
+                                        name: 'All Users',
+                                        data: [
+                                            {% for entry in monthlyusercount %}{{ entry }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                        ]
+                                    },
+
+                                    {
+                                        name: 'Shared Users',
+                                        data: [
+                                            {% for entry in monthlysharedusercount %}{{ entry }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                        ],
+
+                                        marker: {
+                                            lineWidth: 2,
+                                            lineColor: Highcharts.getOptions().colors[3],
+                                            fillColor: 'white'
+                                        }
+                                    }]
+
+                                });
+
+                            </script>
+
+                        </div>
+                    </div>
+                </div>
+                <br>
+            </div>
+
+
+            <div class="col-sm-2">
+                <div>
+
+                    <div class="contentform">
+
+                        <div style="background-color:transparent; color:orange; font-size:20px; font-weight:600; font-family:cursive; width:100%; text-align:center;">Users & Food In Cities</div>
+
+                        <div style="width:100%; display:inline-block; height:400px;">
+
+
+                            <div style="width:100%; height:100%; overflow:auto;">
+
+                                <table cellspacing="0" class="table table-fit">
+                                    <tr>
+                                        <th style="width:3%;">id</th>
+                                        <th style="width:50%;">City</th>
+                                        <th style="width:23%;">Users</th>
+                                        <th style="width:24%;">Food</th>
+                                    </tr>
+                                    {% if cities %}
+                                        {% for city in cities %}
+
+                                        <tr class="test" id="{{product.id}}">
+                                            <td><label>{{forloop.counter}}</label></td>
+                                            <td>{{city.city}}</td>
+                                            <td>{{city.users}}</td>
+                                            <td>{{city.products}}</td>
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    {% else %}
+                                        <script>
+                                            document.getElementById("no_result").style.display = 'block';
+                                        </script>
+                                    {% endif %}
+                                </table>
+
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+                <br>
+            </div>
+
+
+            <div class="col-sm-2">
+                <div>
+
+                    <div class="contentform">
+
+                        <div style="background-color:transparent; color:orange; font-size:20px; font-weight:600; font-family:cursive; width:100%; text-align:center;">Top Cities</div>
+
+                        <div style="width:100%; display:inline-block; height:400px;">
+
+                            <div style="width:100%; height:100%; overflow:auto;">
+
+                                <table cellspacing="0" class="table table-fit">
+                                    <tr>
+                                        <th style="width:3%;">id</th>
+                                        <th style="width:50%;">City</th>
+                                        <th style="width:23%;">Users</th>
+                                        <th style="width:24%;">Food</th>
+                                    </tr>
+                                    {% if topcities %}
+                                        {% for city in topcities %}
+
+                                        <tr class="test" id="{{product.id}}">
+                                            <td><label>{{forloop.counter}}</label></td>
+                                            <td>{{city.city}}</td>
+                                            <td>{{city.users}}</td>
+                                            <td>{{city.products}}</td>
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    {% else %}
+                                        <script>
+                                            document.getElementById("no_result").style.display = 'block';
+                                        </script>
+                                    {% endif %}
+                                </table>
+
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+                <br>
+            </div>
+
+            <div class="col-sm-2">
+                <div>
+
+                    <div class="contentform">
+
+                        <div style="background-color:transparent; color:orange; font-size:20px; font-weight:600; font-family:cursive; width:100%; text-align:center;">Top Users</div>
+
+                        <div style="width:100%; display:inline-block; height:400px;">
+
+
+                            <div style="width:100%; height:100%; overflow:auto;">
+
+                                <table cellspacing="0" class="table table-fit">
+                                    <tr>
+                                        <th style="width:3%;">id</th>
+                                        <th style="width:50%;">Name</th>
+                                        <th style="width:23%;">Food</th>
+                                    </tr>
+                                    {% if topusers %}
+                                        {% for user in topusers %}
+
+                                        <tr class="test" id="{{user.id}}">
+                                            <td><label>{{forloop.counter}}</label></td>
+                                            <td>{{user.name}}</td>
+                                            <td>{{user.products}}</td>
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    {% else %}
+                                        <script>
+                                            document.getElementById("no_result").style.display = 'block';
+                                        </script>
+                                    {% endif %}
+                                </table>
+
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+                <br>
+            </div>
+
+
+            <div class="col-sm-3">
+                <div>
+
+                    <div class="contentform">
+                        <div style="width:100%; height:auto;">
+
+                            <div id="container4" style="min-width: 100%; height: auto; margin: 0 auto"></div>
+                            <script src="https://code.highcharts.com/highcharts.src.js"></script>
+
+                            <script>
+
+                                Highcharts.chart('container4', {
+                                    chart: {
+                                        type: 'bar'
+                                    },
+                                    title: {
+                                        text: 'Shares of Cities'
+                                    },
+                                    xAxis: {
+                                        categories: [
+                                            {% for city in cities %}'{{ city.city }}'{% if not forloop.last %}, {% endif %}{% endfor %}
+                                        ]
+                                    },
+                                    series: [
+                                        {
+                                            name: 'Shares',
+                                            data: [
+                                                {% for city in cities %}{{ city.products }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                            ],
+
+                                            marker: {
+                                                lineWidth: 2,
+                                                lineColor: Highcharts.getOptions().colors[3],
+                                                fillColor: 'white'
+                                            }
+                                        }
+                                    ]
+
+                                });
+
+                            </script>
+
+                        </div>
+                    </div>
+                </div>
+                <br>
+            </div>
+
+
+
+            <div class="col-sm-3">
+                <div>
+
+                    <div class="contentform">
+
+                        <div style="width:100%; height:400px;">
+                            <div id="map_canvas" style="width:100%; height:100%;"><noscript><p>JavaScript is required to render the Google Map.</p></noscript></div>
+                        </div>
+
+                    </div>
+
+                </div>
+                <br>
+            </div>
+
+
+
+            <!--<div class="col-sm-4">-->
+            <!--    <div>-->
+
+            <!--        <div class="contentform">-->
+            <!--            <div style="width:100%; height:300px; background:green;">-->
+
+            <!--            </div>-->
+            <!--        </div>-->
+            <!--    </div>-->
+            <!--    <br>-->
+            <!--</div>-->
+
+            <!--<div class="col-sm-4">-->
+            <!--    <div>-->
+
+            <!--        <div class="contentform">-->
+            <!--            <div style="width:100%; height:300px; background:green;">-->
+
+            <!--            </div>-->
+            <!--        </div>-->
+            <!--    </div>-->
+            <!--    <br>-->
+            <!--</div>-->
+
+            <!--<div class="col-sm-4">-->
+            <!--    <div>-->
+
+            <!--        <div class="contentform">-->
+            <!--            <div style="width:100%; height:300px; background:green;">-->
+
+            <!--            </div>-->
+            <!--        </div>-->
+            <!--    </div>-->
+            <!--    <br>-->
+            <!--</div>-->
+
+
+        </div>
+    </div>
+</div>
+
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+
+<button onclick="topFunction()" id="myBtn" title="Go to top">Top</button>
+
+<script>
+// When the user scrolls down 20px from the top of the document, show the button
+window.onscroll = function() {scrollFunction()};
+
+function scrollFunction() {
+    if (document.body.scrollTop > 80 || document.documentElement.scrollTop > 80) {
+        document.getElementById("myBtn").style.display = "block";
+        document.getElementById("navbar").style.backgroundColor = "black";
+    } else {
+        document.getElementById("myBtn").style.display = "none";
+        document.getElementById("navbar").style.backgroundColor = "transparent";
+    }
+}
+
+// When the user clicks on the button, scroll to the top of the document
+function topFunction() {
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+}
+
+$(document).ready(function() {
+   $('.row #fb_photo').each(function(i) {
+       if(!checkimage(this.src)){
+            this.src = "/static/dating/images/img_not_available.png";
+       }
+   });
+});
+
+
+</script>
+
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

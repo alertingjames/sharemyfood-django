@@ -1,0 +1,298 @@
+<!-- https://developers.google.com/maps/documentation/javascript/tutorial#Audience -->
+
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="/static/sharemyfood/images/logo.png" type="image/jpg">
+
+		<title>ShareMyFood Map</title>
+
+		<style type="text/css">
+
+    		html{ height:100%; }
+    		body{ height:100%; margin:0; padding:0; }
+
+    		#map_canvas{ width:100%; height:100%; }
+
+            .table {
+              width: 100%;
+              background-color: white;
+              overflow-x:auto;
+            }
+
+            .table>tbody>tr>td{
+                vertical-align: middle;
+                horizontal-align: middle;
+            }
+
+            table td, table th {
+              color: #2b686e;
+              padding: 10px;
+              border: 1px solid white;
+              text-align: center;
+              vertical-align: middle;
+            }
+
+            table td {
+              text-align: center;
+              vertical-align: middle;
+            }
+
+            table td:last-child {
+              font-size: 0.95em;
+              line-height: 1.4;
+              text-align: center;
+            }
+
+            table th {
+              background-color: #04a2be;
+              font-weight: 520;
+              color:white;
+              text-align: center;
+              vertical-align: middle;
+            }
+
+            table tr:nth-child(2n) {
+              background-color: white;
+              border: 1px solid #327a81;
+            }
+
+            table tr:nth-child(2n+1) {
+              background-color: #edf7f8;
+              border: 1px solid white;
+            }
+
+
+            /* width */
+            ::-webkit-scrollbar {
+              width: 5px;
+            }
+
+            /* Track */
+            ::-webkit-scrollbar-track {
+              box-shadow: inset 0 0 5px grey;
+              border-radius: 10px;
+            }
+
+            /* Handle */
+            ::-webkit-scrollbar-thumb {
+              background: green;
+              border-radius: 10px;
+            }
+
+            /* Handle on hover */
+            ::-webkit-scrollbar-thumb:hover {
+              background: #b30000;
+            }
+
+
+
+
+
+
+
+		</style>
+
+		<script type="text/javascript">
+		function initialise() {
+			// create object literal to store map properties
+			var myOptions = {
+				zoom: 8 // set zoom level
+				, mapTypeId: google.maps.MapTypeId.ROADMAP // apply tile (options include ROADMAP, SATELLITE, HYBRID and TERRAIN)
+			};
+
+			// create map object and apply properties
+			var map = new google.maps.Map( document.getElementById( "map_canvas" ), myOptions );
+
+			// create map bounds object
+			var bounds = new google.maps.LatLngBounds();
+
+			// create array containing locations
+// 			var locations = [
+// 				[ 'Bondi Beach', -33.890542, 151.274856 ]
+// 				, [ 'Coogee Beach', -33.923036, 151.259052 ]
+// 				, [ 'Cronulla Beach', -34.028249, 151.157507 ]
+// 				, [ 'Manly Beach', -33.80010128657071, 151.28747820854187 ]
+// 				, [ 'Maroubra Beach', -33.950198, 151.259302 ]
+// 			];
+
+			var locations = [
+                {% for user in users %}
+                    {% if user.latitude != None %}
+                        ['{{ user.address }}', {{ user.latitude }}, {{ user.longitude }}, '{{user.picture_url}}'],
+                    {% endif %}
+                {% endfor %}
+            ];
+
+
+			// loop through locations and add to map
+			for ( var i = 0; i < locations.length; i++ )
+			{
+				// get current location
+				var location = locations[ i ];
+
+                // create map position
+    			var position = new google.maps.LatLng( location[ 1 ], location[ 2 ] );
+
+                // add position to bounds
+        		bounds.extend( position );
+
+				// create marker (https://developers.google.com/maps/documentation/javascript/reference#MarkerOptions)
+
+				var icon = {
+                  url: location[ 3 ],
+                  size: new google.maps.Size(40, 40),
+                  origin: new google.maps.Point(0, 0),
+                  anchor: new google.maps.Point(17, 34),
+                  scaledSize: new google.maps.Size(40, 40)
+                };
+
+				var marker = new google.maps.Marker({
+					animation: google.maps.Animation.DROP
+				//  	, icon: icon
+					, map: map
+					, position: position
+					, title: location[ 0 ]
+				});
+
+				// create info window and add to marker (https://developers.google.com/maps/documentation/javascript/reference#InfoWindowOptions)
+				google.maps.event.addListener( marker, 'click', (
+					function( marker, i ) {
+						return function() {
+							var infowindow = new google.maps.InfoWindow();
+							infowindow.setContent( locations[ i ][ 0 ] );
+							infowindow.open( map, marker );
+						}
+					}
+				)( marker, i ) );
+			};
+
+			if (locations.length == 0){
+			    var center = new google.maps.LatLng(20.5936832, 78.962883);
+                // using global variable:
+                map.panTo(center);
+			}else{
+    			// fit map to bounds
+    			map.fitBounds( bounds );
+			};
+
+// 			// fit map to bounds
+// 			map.fitBounds( bounds );
+
+
+		}
+
+		// load map after page has finished loading
+		function loadScript() {
+			var script = document.createElement( "script" );
+			script.type = "text/javascript";
+			script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyByTc3AUbzYq3t3bvOz4C2yCG9PDRuPjYY&libraries=places&callback=initialise"; // initialize method called using callback parameter
+			document.body.appendChild( script );
+		}
+		window.onload = loadScript;
+		</script>
+	</head>
+
+	<body>
+
+
+	    <div id="no_result" style="font-size:18px; font-weight:300; color: black; text-align:center;
+        	position:fixed; left:2%; float:middle; padding: 10px 15px 10px 15px;
+        	transform:translate(-2%, -98%); width:auto; z-index:100; top:400px; display:none;">
+            No any member registered ...
+        </div>
+
+
+	    <div style="height:100%;">
+            <div style="width:20%; height:100%; float:left; overflow:auto;">
+
+                <div style="width:100%; height:150px;">
+                    <img style="width:100%; height:100%; object-fit:cover;" src="/static/sharemyfood/images/city.jpeg">
+                </div>
+
+                <table cellspacing="0" class="table table-fit">
+                    <tr>
+                        <th style="width:3%;">id</th>
+                        <th style="width:50%;">City</th>
+                        <th style="width:23%;">Users</th>
+                        <th style="width:24%;">Products</th>
+                    </tr>
+                    {% if cities %}
+                        {% for city in cities %}
+
+                        <tr class="test" id="{{product.id}}">
+                            <td><label>{{forloop.counter}}</label></td>
+                            <td>{{city.city}}</td>
+                            <td>{{city.users}}</td>
+                            <td>{{city.products}}</td>
+                        </tr>
+
+                        {% endfor %}
+
+                    {% else %}
+                        <script>
+                            document.getElementById("no_result").style.display = 'block';
+                        </script>
+                    {% endif %}
+                </table>
+
+            </div>
+
+            <div style="width:80%; height:100%; float:left; position:relative;">
+                <div id="map_canvas"><noscript><p>JavaScript is required to render the Google Map.</p></noscript></div>
+
+                {% if topcities %}
+                    <div style="width:20%; float:left; z-index:99; left: 2%; top:15%; position:absolute;">
+
+                        <table cellspacing="0" class="table table-fit" style="border-radius:3%; background: rgba(255,255,255,0.8);">
+                            <tr style="background-color:transparent;">
+                                <th style="border:0; background-color:transparent; width:5%;"></th>
+                                <th style="border:0; background-color:transparent; color:red; font-size:20px; font-weight:600; font-family:cursive; width:70%; text-align:left;">Top Cities</th>
+                                <th style="border:0; background-color:transparent; width:25%;"></th>
+                            </tr>
+
+                            {% for city in topcities %}
+
+                                <tr style="background-color:transparent;">
+                                    <td style="border:0; background-color:transparent;"><label>{{forloop.counter}}</label></td>
+                                    <td style="border:0; background-color:transparent; text-align:left; padding-left:10%; font-family:verdana; font-size:16px; color:black;">{{city.city}}</td>
+                                    <td style="border:0; background-color:transparent; text-align:left; padding-left:10%; font-size:16px; color:black;">{{city.products}}</td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </table>
+
+                    </div>
+
+                {% endif %}
+            </div>
+
+        </div>
+	</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
